@@ -80,7 +80,7 @@ $GLOBALS['TL_DCA']['tl_typesense_collection'] = array
   'palettes' => array
   (
     '__selector__'                => [],
-    'default'                     => 'name,label;query_settings;header_template;item_template;footer_template,no_results_template'
+    'default'                     => 'name,label;query_settings;header_template;header_advanced_template;item_template;item_advanced_template;footer_template;footer_advanced_template;no_results_template'
   ),
 
   // Subpalettes
@@ -134,6 +134,13 @@ $GLOBALS['TL_DCA']['tl_typesense_collection'] = array
       'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
       'sql'                   => 'text NULL',
     ),
+    'header_advanced_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
     'item_template' => array
     (
       'exclude'               => true,
@@ -141,7 +148,21 @@ $GLOBALS['TL_DCA']['tl_typesense_collection'] = array
       'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
       'sql'                   => 'text NULL',
     ),
+    'item_advanced_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
     'footer_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>false, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'footer_advanced_template' => array
     (
       'exclude'               => true,
       'inputType'             => 'textarea',

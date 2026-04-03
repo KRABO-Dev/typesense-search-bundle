@@ -8,4 +8,4 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['typesense_collections'] = [
   'foreignKey'              => 'tl_typesense_collection.label',
 ];
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['typesense_search'] = '{title_legend},name,headline,type;{template_legend:hide},customTpl;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space;typesense_collections,jumpTo';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['typesense_search'] = '{title_legend},name,headline,type;{template_legend:hide},customTpl;{protected_legend:hide:hide},protected;{expert_legend:hide},guests,cssID,space;typesense_collections';

@@ -45,19 +45,33 @@
                    return results<?= $collection['id']; ?>.hits;
                 },
                 templates: {
-                  <?php if (strlen($collection['header_template'])): ?>
+                  <?php if (strlen($collection['header_advanced_template'])): ?>
+                    header({items, source, state, html}) {
+                      <?php if ($this->debug): ?>console.log(source); console.log(items); console.log(state);<?php endif; ?>
+                      <?= $collection['header_advanced_template']; ?>
+                    },
+                  <?php elseif (strlen($collection['header_template'])): ?>
                     header({items, source, state, html}) {
                       <?php if ($this->debug): ?>console.log(source); console.log(items); console.log(state);<?php endif; ?>
                       return html`<?= $collection['header_template']; ?>`;
                     },
                   <?php endif; ?>
-                  <?php if (strlen($collection['item_template'])): ?>
+                  <?php if (strlen($collection['item_advanced_template'])): ?>
+                    item({ item, source, state, html }) {
+                        <?php if ($this->debug): ?>console.log(item);<?php endif; ?>
+                        <?= $collection['item_advanced_template']; ?>
+                      },
+                  <?php elseif (strlen($collection['item_template'])): ?>
                     item({ item, source, state, html }) {
                       <?php if ($this->debug): ?>console.log(item);<?php endif; ?>
                       return html`<?= $collection['item_template']; ?>`;
                     },
                   <?php endif; ?>
-                  <?php if (strlen($collection['footer_template'])): ?>
+                  <?php if (strlen($collection['footer_advanced_template'])): ?>
+                    footer({items, source, state, html}) {
+                      <?= $collection['footer_advanced_template']; ?>
+                    },
+                  <?php elseif (strlen($collection['footer_template'])): ?>
                     footer({items, source, state, html}) {
                       return html`<?= $collection['footer_template']; ?>`;
                     },

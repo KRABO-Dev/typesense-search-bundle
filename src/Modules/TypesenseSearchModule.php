@@ -2,12 +2,10 @@
 
 namespace Krabo\TypesenseSearchBundle\Modules;
 
-use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\Input;
 use Contao\Module;
 use Contao\StringUtil;
 use Contao\System;
-use Haste\Util\Debug;
 use Krabo\TypesenseSearchBundle\Typesense;
 
 class TypesenseSearchModule extends Module
@@ -41,11 +39,6 @@ class TypesenseSearchModule extends Module
         $strKeywords = trim(Input::get('keywords'));
 
         $this->Template->TypesenseEnabled = $typesense->isEnabled();
-        $this->Template->uniqueId = $this->id;
-        $this->Template->rootPageId = $objPage->rootId;
-        $this->Template->redirect = $this->getRedirectUrl();
-        $this->Template->isResultPage = $this->isResultsPage();
-        $this->Template->keywordLabel = $GLOBALS['TL_LANG']['MSC']['keywords'];
         $this->Template->search = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['searchLabel']);
         $this->Template->didYouMeanLabel = StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['didYouMeanLabel']);
         $this->Template->config = $typesense->getClientConfiguration();
@@ -57,45 +50,15 @@ class TypesenseSearchModule extends Module
           $collection = $objResults->first()->row();
           $collection['query_settings'] = StringUtil::decodeEntities($collection['query_settings']);
           $collection['header_template'] = StringUtil::decodeEntities($collection['header_template']);
+          $collection['header_advanced_template'] = StringUtil::decodeEntities($collection['header_advanced_template']);
           $collection['item_template'] = StringUtil::decodeEntities($collection['item_template']);
+          $collection['item_advanced_template'] = StringUtil::decodeEntities($collection['item_advanced_template']);
           $collection['footer_template'] = StringUtil::decodeEntities($collection['footer_template']);
+          $collection['footer_advanced_template'] = StringUtil::decodeEntities($collection['footer_advanced_template']);
           $collection['no_results_template'] = StringUtil::decodeEntities($collection['no_results_template']);
           $collections[] = $collection;
         }
         $this->Template->collections = $collections;
-
         $this->Template->keyword = StringUtil::specialchars($strKeywords);
-        $this->Template->action = $this->getActionUrl();
-    }
-
-    protected function isResultsPage()
-    {
-
-        global $objPage;
-
-        return $objPage->id === $this->jumpTo;
-    }
-
-    protected function getRedirectUrl()
-    {
-
-        $strRedirect = '';
-
-        if ($objPage = \PageModel::findByPk($this->jumpTo)) {
-            $strRedirect = $objPage->getFrontendUrl();
-        }
-
-        return $strRedirect;
-    }
-
-    protected function getActionUrl()
-    {
-
-        if ($objJump = \PageModel::findByPk($this->jumpTo)) {
-            return $objJump->getFrontendUrl();
-        }
-
-        global $objPage;
-        return $objPage->getFrontendUrl();
     }
 }
