@@ -56,7 +56,9 @@ class TypesenseSearchModule extends Module
           $collection['footer_template'] = StringUtil::decodeEntities($collection['footer_template']);
           $collection['footer_advanced_template'] = StringUtil::decodeEntities($collection['footer_advanced_template']);
           $collection['no_results_template'] = StringUtil::decodeEntities($collection['no_results_template']);
-          $collections[] = $collection;
+          if ($typesense->doesCollectionExist($collection['name'])) {
+            $collections[] = $collection;
+          }
         }
         $this->Template->collections = $collections;
         $this->Template->keyword = StringUtil::specialchars($strKeywords);

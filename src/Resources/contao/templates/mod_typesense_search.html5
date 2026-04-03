@@ -14,7 +14,7 @@
      let typesenseClient = new Typesense.Client({
          'nodes': [
            {
-         host: "localhost", //"<?= $this->config['host']; ?>",
+         host: "<?= $this->config['host']; ?>",
          path: "",
          port: "<?= $this->config['port']; ?>",
          protocol: "<?= $this->config['protocol']; ?>",
