@@ -1,0 +1,13 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+  Krabo\TypesenseSearchBundle\Controller\IsotopeProductController:
+    public: true
+  Krabo\TypesenseSearchBundle\Cron\IndexIsoProductsCron:
+    public: true
+    tags:
+      - { name: 'contao.cronjob', 'interval': '*/15 * * * *' }
+  Krabo\TypesenseSearchBundle\Indexer:
+    tags:
+      - { name: 'contao.search_indexer' }

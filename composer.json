@@ -1,0 +1,19 @@
+{
+  "name":"krabo/typesense-search-bundle",
+  "description":"Typesense Search Bundle",
+  "type": "contao-bundle",
+  "license":"LGPL-3.0-or-later",
+  "version": "1.0.0",
+  "require": {
+    "contao/core-bundle": "^4.9",
+    "typesense/typesense-php": "^6.0"
+  },
+  "extra": {
+    "contao-manager-plugin": "Krabo\\TypesenseSearchBundle\\ContaoManager\\Plugin"
+  },
+  "autoload": {
+    "psr-4": {
+      "Krabo\\TypesenseSearchBundle\\": "src/"
+    }
+  }
+}

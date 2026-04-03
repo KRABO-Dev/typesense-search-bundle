@@ -1,0 +1,76 @@
+ 
+ <script src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-theme-classic"/>
+ <script src="https://cdn.jsdelivr.net/npm/typesense@1/dist/typesense.min.js"></script>
+ <div class="container">
+     <div class="search-panel">
+         <div id="autocomplete"></div>
+     </div>
+
+ </div>
+
+
+ <script>
+     let typesenseClient = new Typesense.Client({
+         'nodes': [
+           {
+         host: "localhost", //"<?= $this->config['host']; ?>",
+         path: "",
+         port: "<?= $this->config['port']; ?>",
+         protocol: "<?= $this->config['protocol']; ?>",
+       },
+         ],
+         'apiKey': '<?= $this->config['search_api_key']; ?>',
+         'connectionTimeoutSeconds': 2
+     })
+
+
+     const {autocomplete} = window['@algolia/autocomplete-js'];
+     autocomplete({
+         container: '#autocomplete',
+         placeholder: '<?= $this->search; ?>',
+         async getSources({query}) {
+          <?php foreach($this->collections as $collection): ?>
+            const results<?=$collection['id']; ?> = await typesenseClient.collections('<?= $this->config['collection_prefix']; ?><?= $collection['name']; ?>').documents().search({
+                 q: query <?php if (strlen($collection['query_settings'])): ?>,<?= $collection['query_settings']; ?><?php endif; ?>
+             });
+          <?php endforeach; ?>
+          return [
+            <?php $i = count($this->collections); ?>
+            <?php foreach($this->collections as $collection): ?>
+            <?php $i--; ?>
+              {
+                sourceId: 'source<?= $collection['id']; ?>',
+                getItems() {
+                   return results<?= $collection['id']; ?>.hits;
+                },
+                templates: {
+                  <?php if (strlen($collection['header_template'])): ?>
+                    header({items, source, state, html}) {
+                      <?php if ($this->debug): ?>console.log(source); console.log(items); console.log(state);<?php endif; ?>
+                      return html`<?= $collection['header_template']; ?>`;
+                    },
+                  <?php endif; ?>
+                  <?php if (strlen($collection['item_template'])): ?>
+                    item({ item, source, state, html }) {
+                      <?php if ($this->debug): ?>console.log(item);<?php endif; ?>
+                      return html`<?= $collection['item_template']; ?>`;
+                    },
+                  <?php endif; ?>
+                  <?php if (strlen($collection['footer_template'])): ?>
+                    footer({items, source, state, html}) {
+                      return html`<?= $collection['footer_template']; ?>`;
+                    },
+                  <?php endif; ?>
+                  <?php if (strlen($collection['no_results_template'])): ?>
+                    noResults(source, state, html) {
+                      return html`<?= $collection['no_results_template']; ?>`;
+                    },
+                  <?php endif; ?>
+                }
+              } <?php if ($i > 0): ?>,<?php endif; ?>
+            <?php endforeach; ?>
+          ];
+         }
+     });
+ </script>
