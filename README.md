@@ -1,0 +1,1 @@
+# Typesense Search For Contao
