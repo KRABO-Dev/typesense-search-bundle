@@ -77,8 +77,8 @@
                     },
                   <?php endif; ?>
                   <?php if (strlen($collection['no_results_template'])): ?>
-                    noResults(source, state, html) {
-                      return html`<?= $collection['no_results_template']; ?>`;
+                    noResults(source, state) {
+                      return "<?= $collection['no_results_template']; ?>";
                     },
                   <?php endif; ?>
                 }
