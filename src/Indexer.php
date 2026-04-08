@@ -40,10 +40,18 @@ class Indexer implements  IndexerInterface {
     if (!$typesense->isEnabled()) {
       return;
     }
+
+    try {
+      $title = $document->getContentCrawler()->filterXPath('//head/title')->first()->text();
+    } catch (\Exception $e) {
+      $title = 'undefined';
+    }
+
     foreach($jsonLdScriptsData as $data) {
       if (!empty($data['pageId'])) {
         $pageId = $data['pageId'];
         $objRootPage = PageModel::findByPk($data['pageId']);
+        $title = StringUtil::decodeEntities($objRootPage->title);
         while($objRootPage->pid) {
           $objRootPage = PageModel::findByPk($objRootPage->pid);
         }
@@ -94,11 +102,6 @@ class Indexer implements  IndexerInterface {
         'index' => false,
       ],
       [
-        'name' => 'image_url',
-        'type' => 'string',
-        'index' => false,
-      ],
-      [
         'name' => 'jsonLd',
         'type' => 'string[]',
         'index' => true,
@@ -107,18 +110,16 @@ class Indexer implements  IndexerInterface {
       ]
     ];
     if (!$typesense->doesCollectionExist($collection)) {
-      $typesense->createCollection($collection, $fields);
+      $typesense->createCollection($collection, $fields, 'page');
     } else {
-      $typesense->updateCollection($collection, $fields);
+      $typesense->updateCollection($collection, $fields, 'page');
     }
 
-
-    try {
-      $title = $document->getContentCrawler()->filterXPath('//head/title')->first()->text();
-    } catch (\Exception $e) {
-      $title = 'undefined';
-    }
     $arrData = $this->extractContents($document->getBody(), $title);
+    $arrData['pageId'] = $pageId;
+    $arrData['rootPageId'] = $rootPageId;
+    $arrData['jsonLds'] = $jsonLds;
+    $arrData['document'] = $document;
     $params = [
       'url' => (string)$document->getUri(),
       'title' => $title,
@@ -126,10 +127,9 @@ class Indexer implements  IndexerInterface {
       'keywords' => array_values($arrData['keywords']),
       'description' => $arrData['description'],
       'full_text' => $arrData['text'],
-      'image_url' => '',
       'jsonLd' => $jsonLds,
     ];
-    $typesense->indexDocument($params, $document->getUri(), $collection);
+    $typesense->indexDocument($params, $document->getUri(), $collection, 'page', $arrData);
   }
 
   private function extractContents(string $content, string $title): array {

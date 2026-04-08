@@ -51,7 +51,7 @@ class IsotopeProductHelper {
     }
     $typesense = Typesense::getInstance();
     foreach ($objConfigs as $objConfig) {
-      $typesense->createCollection('iso_product_index_' . $objConfig->id, $this->getProductCollectionFields());
+      $typesense->createCollection('iso_product_index_' . $objConfig->id, $this->getProductCollectionFields(), 'iso_product');
     }
   }
 
@@ -170,12 +170,12 @@ class IsotopeProductHelper {
       $defaultDescription = strip_tags($defaultDescription);
 
       $objItem['available'] = $objProduct->isAvailableInFrontend();
-      $objItem['title'] = $defaultTitle;
+      $objItem['title'] = StringUtil::decodeEntities($defaultTitle);
       foreach($languages as $language) {
         $objItem['title_' . $language] = '';
       }
       $objItem['url'] = $productUrl;
-      $objItem['description'] = $defaultDescription;
+      $objItem['description'] = StringUtil::decodeEntities($defaultDescription);
       foreach($languages as $language) {
         $objItem['description_' . $language] = '';
       }
@@ -194,15 +194,16 @@ class IsotopeProductHelper {
         $objTranslatedProduct = Database::getInstance()->prepare("SELECT * FROM tl_iso_product  WHERE pid = ? AND language = ?")->execute($objProduct->id, $language);
         if ($objTranslatedProduct->first()) {
           $objItem['title_' . $language] = $objTranslatedProduct->name ?? '';
+          $objItem['title_' . $language] = StringUtil::decodeEntities($objItem['title_' . $language]);
           $translatedDescription = $objTranslatedProduct->description ?? '';
           $translatedDescription = System::getContainer()->get('contao.insert_tag.parser')->replaceInline($translatedDescription ?? '');
           $translatedDescription = Controller::convertRelativeUrls($translatedDescription, $strLink);
           $translatedDescription = strip_tags($translatedDescription);
-          $objItem['description_' . $language] = $translatedDescription;
+          $objItem['description_' . $language] = StringUtil::decodeEntities($translatedDescription);
         }
       }
 
-      $typesense->indexDocument($objItem, $objProduct->id, $collection);
+      $typesense->indexDocument($objItem, $objProduct->id, $collection, 'iso_product', ['id' => $objProduct->id, 'objProduct' => $objProduct]);
     }
     else
     {

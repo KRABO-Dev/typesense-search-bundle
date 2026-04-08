@@ -18,8 +18,9 @@
 
 namespace Krabo\TypesenseSearchBundle;
 
+use Krabo\TypesenseSearchBundle\Event\TypesenseIndexEvent;
+use Krabo\TypesenseSearchBundle\Event\TypesenseSchemaEvent;
 use Typesense\Client;
-use Typesense\Exceptions\ObjectNotFound;
 
 class Typesense {
 
@@ -96,8 +97,11 @@ class Typesense {
     }
   }
 
-  public function indexDocument(array $document, string $id, string $collection) {
+  public function indexDocument(array $document, string $id, string $collection, string $type, array $sourceData) {
     try {
+      $event = new TypesenseIndexEvent($document, $sourceData, $type);
+      \System::getContainer()->get('event_dispatcher')->dispatch($event);
+      $document = $event->document;
       $document['id'] = $id;
       $this->client->collections[$this->getPrefix() . $collection]->documents->upsert($document);
     } catch (\Exception $e) {
@@ -105,7 +109,7 @@ class Typesense {
     }
   }
 
-  public function createCollection(string $collection, array $collectionFields) {
+  public function createCollection(string $collection, array $collectionFields, string $type) {
     try {
       $this->client->collections[$this->getPrefix() . $collection]->retrieve();
       $this->client->collections[$this->getPrefix() . $collection]->delete();
@@ -117,16 +121,22 @@ class Typesense {
         'name' => $this->getPrefix() . $collection,
         'fields' => $collectionFields
       ];
+      $event = new TypesenseSchemaEvent($schema, $type);
+      \System::getContainer()->get('event_dispatcher')->dispatch($event);
+      $schema = $event->schema;
       $this->client->collections->create($schema);
     } catch (\Exception $e) {
     }
   }
 
-  public function updateCollection(string $collection, array $collectionFields) {
+  public function updateCollection(string $collection, array $collectionFields, string $type) {
     try {
       $schema = [
         'fields' => $collectionFields
       ];
+      $event = new TypesenseSchemaEvent($schema, $type);
+      \System::getContainer()->get('event_dispatcher')->dispatch($event);
+      $schema = $event->schema;
       $this->client->collections[$this->getPrefix() . $collection]->update($schema);
     } catch (\Exception $e) {
     }
