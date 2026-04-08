@@ -63,7 +63,11 @@ class Indexer implements  IndexerInterface {
     $rawJsonLds = $document->extractJsonLdScripts();
     $jsonLds = [];
     foreach ($rawJsonLds as $rawJsonLd) {
-      $jsonLds[] = $rawJsonLd['@type'];
+      if (!empty($rawJsonLd['@type'])) {
+        $jsonLds[] = $rawJsonLd['@type'];
+      } elseif (!empty($rawJsonLd['@context'])) {
+        $jsonLds[] = $rawJsonLd['@context'];
+      }
     }
 
     $collection = 'pages_' . $rootPageId ?? 0;
@@ -77,12 +81,6 @@ class Indexer implements  IndexerInterface {
         'name' => 'body',
         'type' => 'string',
         'index' => true,
-      ],
-      [
-        'name' => 'keywords',
-        'type' => 'string[]',
-        'index' => true,
-        'optional' => true,
       ],
       [
         'name' => 'description',
@@ -124,7 +122,6 @@ class Indexer implements  IndexerInterface {
       'url' => (string)$document->getUri(),
       'title' => $title,
       'body' => $arrData['body'],
-      'keywords' => array_values($arrData['keywords']),
       'description' => $arrData['description'],
       'full_text' => $arrData['text'],
       'jsonLd' => $jsonLds,
@@ -208,25 +205,6 @@ class Indexer implements  IndexerInterface {
       $arrData['description'] = trim(preg_replace('/ +/', ' ', StringUtil::decodeEntities($tags[1])));
     }
 
-    // Get the keywords
-    $arrData['keywords'] = [];
-    if (preg_match('/<meta[^>]+name="keywords"[^>]+content="([^"]*)"[^>]*>/i', $strHead, $tags))
-    {
-      $arrData['keywords'] = array_merge($arrData['keywords'], explode(",", preg_replace('/ +/', ' ', $tags[1])));
-    }
-    // Read the title and alt attributes
-    if (preg_match_all('/<* (title|alt)="([^"]*)"[^>]*>/i', $strBody, $tags))
-    {
-      $arrData['keywords'] = array_merge($arrData['keywords'], $tags[2]);
-    }
-    foreach ($arrData['keywords'] as $i => $keyword) {
-      $arrData['keywords'][$i] = StringUtil::decodeEntities($keyword);
-      if (!strlen($arrData['keywords'][$i])) {
-        unset($arrData['keywords'][$i]);
-      }
-    }
-    $arrData['keywords'] = array_unique($arrData['keywords']);
-
     // Add a whitespace character before line-breaks and between consecutive tags (see #5363)
     $strBody = str_ireplace(array('<br', '><'), array(' <br', '> <'), $strBody);
     $strBody = strip_tags($strBody);
@@ -235,7 +213,7 @@ class Indexer implements  IndexerInterface {
     $arrData['body'] = $strBody;
 
     // Put everything together
-    $arrData['text'] = $strBody . ' ' . $arrData['description'] . "\n" . $title . "\n" . implode(', ', $arrData['keywords']);
+    $arrData['text'] = $strBody . ' ' . $arrData['description'] . "\n" . $title;
     $arrData['text'] = trim(preg_replace('/ +/', ' ', StringUtil::decodeEntities($arrData['text'])));
     return $arrData;
   }
