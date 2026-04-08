@@ -43,6 +43,11 @@ class Indexer implements  IndexerInterface {
 
     try {
       $title = $document->getContentCrawler()->filterXPath('//head/title')->first()->text();
+      $title = explode(" - ", $title);
+      if (count($title)>1) {
+        array_pop($title);
+      }
+      $title = implode(" - ", $title);
     } catch (\Exception $e) {
       $title = 'undefined';
     }
@@ -51,7 +56,6 @@ class Indexer implements  IndexerInterface {
       if (!empty($data['pageId'])) {
         $pageId = $data['pageId'];
         $objRootPage = PageModel::findByPk($data['pageId']);
-        $title = StringUtil::decodeEntities($objRootPage->title);
         while($objRootPage->pid) {
           $objRootPage = PageModel::findByPk($objRootPage->pid);
         }
