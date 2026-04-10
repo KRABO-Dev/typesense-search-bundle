@@ -17,5 +17,8 @@
  */
 
 $GLOBALS['TL_LANG']['MOD']['tl_typesense_collection'] = ['Typesense Collecties', 'Beheer Typesense Collecties'];
-$GLOBALS['TL_LANG']['FMD']['typesense_search'] = ['Typesense Search', ''];
+$GLOBALS['TL_LANG']['FMD']['typesense_autocomplete'] = ['Typesense Autocomplete', ''];
+$GLOBALS['TL_LANG']['FMD']['typesense_search'] = ['Typesense Zoeken', ''];
 $GLOBALS['TL_LANG']['tl_module']['typesense_collections'] = ['Typesense Collecties', 'Selecteer de collecties waarin gezocht gaat worden.'];
+$GLOBALS['TL_LANG']['tl_module']['typesense_offline_jumpTo'] = ['Zoekpagina indien Typesense offline is', ''];
+$GLOBALS['TL_LANG']['tl_module']['typesense_search_jumpTo'] = ['Zoekpagina na het zoeken van autocomplete', ''];

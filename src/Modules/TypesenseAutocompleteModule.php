@@ -2,13 +2,12 @@
 
 namespace Krabo\TypesenseSearchBundle\Modules;
 
-use Contao\Input;
-use Contao\StringUtil;
+use Contao\PageModel;
 
-class TypesenseSearchModule extends AbstractTypesenseModule
+class TypesenseAutocompleteModule extends AbstractTypesenseModule
 {
 
-    protected $strTemplate = 'mod_typesense_search';
+    protected $strTemplate = 'mod_typesense_autocomplete';
 
     public function generate()
     {
@@ -20,7 +19,7 @@ class TypesenseSearchModule extends AbstractTypesenseModule
             $objTemplate->link = $this->name;
             $objTemplate->title = $this->headline;
             $objTemplate->href = 'contao/main.php?do=themes&amp;table=tl_module&amp;act=edit&amp;id=' . $this->id;
-            $objTemplate->wildcard = '### ' . strtoupper($GLOBALS['TL_LANG']['FMD']['typesense_search'][0]) . ' ###';
+            $objTemplate->wildcard = '### ' . strtoupper($GLOBALS['TL_LANG']['FMD']['typesense_autocomplete'][0]) . ' ###';
 
             return $objTemplate->parse();
         }
@@ -28,10 +27,13 @@ class TypesenseSearchModule extends AbstractTypesenseModule
         return parent::generate();
     }
 
-    protected function compile()
-    {
-        parent::compile();
-        $strKeywords = trim(Input::get('keywords'));
-        $this->Template->keywords = StringUtil::specialchars($strKeywords);
+    public function compile() {
+      parent::compile();
+
+      if (($objTarget = $this->objModel->getRelated('typesense_search_jumpTo')) instanceof PageModel)
+      {
+        /** @var PageModel $objTarget */
+        $this->Template->redirect = $objTarget->getAbsoluteUrl();
+      }
     }
 }

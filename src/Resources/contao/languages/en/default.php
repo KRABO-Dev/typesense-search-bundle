@@ -17,3 +17,8 @@
  */
 
 $GLOBALS['TL_LANG']['MOD']['tl_typesense_collection'] = ['Typesense Collections', 'Manage Typesense Collections'];
+$GLOBALS['TL_LANG']['FMD']['typesense_autocomplete'] = ['Typesense Autocomplete', ''];
+$GLOBALS['TL_LANG']['FMD']['typesense_search'] = ['Typesense Search', ''];
+$GLOBALS['TL_LANG']['tl_module']['typesense_collections'] = ['Typesense Collections', 'Select the typesense collections for searching.'];
+$GLOBALS['TL_LANG']['tl_module']['typesense_offline_jumpTo'] = ['Search Page when Typesense is offline', ''];
+$GLOBALS['TL_LANG']['tl_module']['typesense_search_jumpTo'] = ['Search Page after completing search in autocomplete', ''];

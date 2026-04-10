@@ -4,6 +4,7 @@
  * Frontend modules
  */
 
+use Krabo\TypesenseSearchBundle\Modules\TypesenseAutocompleteModule;
 use Krabo\TypesenseSearchBundle\Modules\TypesenseSearchModule;
 
 array_insert($GLOBALS['BE_MOD']['system'], 3, array
@@ -16,7 +17,8 @@ array_insert($GLOBALS['BE_MOD']['system'], 3, array
 
 array_insert($GLOBALS['FE_MOD'], 3, [
     'typesense-search-modules' => [
-        'typesense_search' => TypesenseSearchModule::class,
+      'typesense_autocomplete' => TypesenseAutocompleteModule::class,
+      'typesense_search' => TypesenseSearchModule::class,
     ]
 ]);
 

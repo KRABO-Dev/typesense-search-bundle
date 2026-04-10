@@ -80,7 +80,7 @@ $GLOBALS['TL_DCA']['tl_typesense_collection'] = array
   'palettes' => array
   (
     '__selector__'                => [],
-    'default'                     => 'name,label;query_settings;header_template;header_advanced_template;item_template;item_advanced_template;footer_template;footer_advanced_template;no_results_template'
+    'default'                     => 'name,label;{autocomplete_legend},query_settings;header_template;header_advanced_template;item_template;item_advanced_template;footer_template;footer_advanced_template;no_results_template;{instantsearch_legend},instantsearch_query_settings;instantsearch_stats_template;instantsearch_stats_advanced_template;instantsearch_item_template;instantsearch_item_advanced_template;instantsearch_no_results_template'
   ),
 
   // Subpalettes
@@ -170,6 +170,48 @@ $GLOBALS['TL_DCA']['tl_typesense_collection'] = array
       'sql'                   => 'text NULL',
     ),
     'no_results_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'instantsearch_query_settings' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'instantsearch_stats_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'instantsearch_stats_advanced_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'instantsearch_item_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'instantsearch_item_advanced_template' => array
+    (
+      'exclude'               => true,
+      'inputType'             => 'textarea',
+      'eval'                    => array('allowHtml'=>true, 'class'=>'monospace', 'rte'=>'ace'),
+      'sql'                   => 'text NULL',
+    ),
+    'instantsearch_no_results_template' => array
     (
       'exclude'               => true,
       'inputType'             => 'textarea',
