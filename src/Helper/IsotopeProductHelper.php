@@ -109,15 +109,9 @@ class IsotopeProductHelper {
     // Get default URL - Check product first and if not fall back to config reader page
     $intJumpTo = $objProduct->feedJumpTo ?: $objConfig->feedJumpTo;
 
-    if($intJumpTo == '')
+    if(empty($intJumpTo) || $intJumpTo === 0)
     {
-      //Get the first reader page we can find
-      $objModules = Database::getInstance()->prepare("SELECT iso_reader_jumpTo FROM tl_module WHERE ".(count($arrPages)>0 ? "iso_reader_jumpTo IN (" . implode(',',$arrPages) . ") AND " : ''). "iso_reader_jumpTo !=''")->limit(1)->execute();
-
-      if($objModules->numRows)
-      {
-        $intJumpTo = $objModules->iso_reader_jumpTo;
-      }
+      $intJumpTo = reset($productCategories);
     }
 
     // Ensure the product is published, it's set to be in the feed, it has a price,
