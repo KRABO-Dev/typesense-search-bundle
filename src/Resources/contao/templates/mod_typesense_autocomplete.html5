@@ -35,7 +35,9 @@
          async getSources({query}) {
           <?php foreach($this->collections as $collection): ?>
             const results<?=$collection['id']; ?> = await typesenseClient.collections('<?= $this->config['collection_prefix']; ?><?= $collection['name']; ?>').documents().search({
-                 q: query <?php if (strlen($collection['query_settings'])): ?>,<?= $collection['query_settings']; ?><?php endif; ?>
+                 q: query
+                 <?php if (strlen($collection['query_settings'])): ?>,<?= $collection['query_settings']; ?><?php endif; ?>
+                 <?php if (strlen($collection['analytics_tag'])): ?>, "analytics_tag": <?= $collection['analytics_tag']; ?><? endif; ?>
              });
           <?php endforeach; ?>
           return [

@@ -10,6 +10,10 @@ class TypesenseSearchModule extends AbstractTypesenseModule
 
     protected $strTemplate = 'mod_typesense_search';
 
+    protected function getType(): string {
+      return 'Search';
+    }
+
     public function generate()
     {
 

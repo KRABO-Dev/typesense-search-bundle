@@ -9,6 +9,10 @@ class TypesenseAutocompleteModule extends AbstractTypesenseModule
 
     protected $strTemplate = 'mod_typesense_autocomplete';
 
+    protected function getType(): string {
+      return 'Autocomplete';
+    }
+
     public function generate()
     {
 

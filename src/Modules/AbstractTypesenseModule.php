@@ -6,10 +6,13 @@ use Contao\Module;
 use Contao\PageModel;
 use Contao\StringUtil;
 use Contao\System;
+use Krabo\TypesenseSearchBundle\Event\TypesenseFECollectionEvent;
 use Krabo\TypesenseSearchBundle\Typesense;
 
 abstract class AbstractTypesenseModule extends Module
 {
+
+  abstract protected function getType(): string;
 
   protected function compile()
   {
@@ -41,7 +44,10 @@ abstract class AbstractTypesenseModule extends Module
       $collection['instantsearch_no_results_template'] = StringUtil::decodeEntities($collection['instantsearch_no_results_template']);
 
       if ($typesense->doesCollectionExist($collection['name'])) {
-        $collections[$i] = $collection;
+        $collection['label'] = StringUtil::decodeEntities($collection['label']);
+        $event = new TypesenseFECollectionEvent($collection, $this);
+        \System::getContainer()->get('event_dispatcher')->dispatch($event);
+        $collections[$i] = $event->collection;
         $i++;
       }
     }

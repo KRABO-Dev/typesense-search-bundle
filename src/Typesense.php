@@ -19,8 +19,10 @@
 namespace Krabo\TypesenseSearchBundle;
 
 use Krabo\TypesenseSearchBundle\Event\TypesenseIndexEvent;
+use Krabo\TypesenseSearchBundle\Event\TypesensePostSchemaEvent;
 use Krabo\TypesenseSearchBundle\Event\TypesenseSchemaEvent;
 use Typesense\Client;
+use Typesense\Exceptions\ConfigError;
 
 class Typesense {
 
@@ -29,16 +31,10 @@ class Typesense {
    */
   private static $instance;
 
-  private Client $client;
+  private ?Client $client = null;
 
   private function __construct() {
-    if (!empty($GLOBALS['TL_CONFIG']['krabo_typesense_enabled'])) {
-      try {
-        $this->client = $this->getClient();
-      } catch (\Exception $e) {
-
-      }
-    }
+    $this->getClient();
   }
 
   public static function getInstance(): Typesense {
@@ -77,7 +73,7 @@ class Typesense {
     return $isEnabled;
   }
 
-  private function getPrefix() {
+  public function getPrefix() {
     return $this->getClientConfiguration()['collection_prefix'];
   }
 
@@ -121,10 +117,12 @@ class Typesense {
         'name' => $this->getPrefix() . $collection,
         'fields' => $collectionFields
       ];
-      $event = new TypesenseSchemaEvent($schema, $type);
+      $event = new TypesenseSchemaEvent($schema, $type, $collection, $this);
       \System::getContainer()->get('event_dispatcher')->dispatch($event);
       $schema = $event->schema;
       $this->client->collections->create($schema);
+      $event = new TypesensePostSchemaEvent($schema, $type, $collection, $this);
+      \System::getContainer()->get('event_dispatcher')->dispatch($event);
     } catch (\Exception $e) {
     }
   }
@@ -134,10 +132,12 @@ class Typesense {
       $schema = [
         'fields' => $collectionFields
       ];
-      $event = new TypesenseSchemaEvent($schema, $type);
+      $event = new TypesenseSchemaEvent($schema, $type, $collection, $this);
       \System::getContainer()->get('event_dispatcher')->dispatch($event);
       $schema = $event->schema;
       $this->client->collections[$this->getPrefix() . $collection]->update($schema);
+      $event = new TypesensePostSchemaEvent($schema, $type, $collection, $this);
+      \System::getContainer()->get('event_dispatcher')->dispatch($event);
     } catch (\Exception $e) {
     }
   }
@@ -167,21 +167,30 @@ class Typesense {
     return $collections;
   }
 
-  protected function getClient(): Client {
-    $config = $this->getClientConfiguration();
-    return new Client(
-      [
-        'api_key'         => $config['indexer_api_key'],
-        'nodes'           => [
+  public function getClient(): ?Client {
+    if (empty($GLOBALS['TL_CONFIG']['krabo_typesense_enabled'])) {
+      $this->client = null;
+    } elseif ($this->client === null) {
+      $config = $this->getClientConfiguration();
+      try {
+        $this->client = new Client(
           [
-            'host'     => $config['host'],
-            'port'     => $config['port'],
-            'protocol' => $config['protocol'],
-          ],
-        ],
-        'connection_timeout_seconds' => 2,
-      ]
-    );
+            'api_key' => $config['indexer_api_key'],
+            'nodes' => [
+              [
+                'host' => $config['host'],
+                'port' => $config['port'],
+                'protocol' => $config['protocol'],
+              ],
+            ],
+            'connection_timeout_seconds' => 2,
+          ]
+        );
+      } catch (ConfigError $e) {
+        $this->client = null;
+      }
+    }
+    return $this->client;
   }
 
 }

@@ -20,7 +20,7 @@ namespace Krabo\TypesenseSearchBundle\Event;
 
 use Krabo\TypesenseSearchBundle\Typesense;
 
-class TypesenseSchemaEvent {
+class TypesensePostSchemaEvent {
 
   public array $schema;
 

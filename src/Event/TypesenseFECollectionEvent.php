@@ -18,23 +18,18 @@
 
 namespace Krabo\TypesenseSearchBundle\Event;
 
+use Krabo\TypesenseSearchBundle\Modules\AbstractTypesenseModule;
 use Krabo\TypesenseSearchBundle\Typesense;
 
-class TypesenseSchemaEvent {
+class TypesenseFECollectionEvent {
 
-  public array $schema;
+  public array $collection;
 
-  public string $type;
+  public AbstractTypesenseModule $module;
 
-  public string $collection;
-
-  public Typesense $typesense;
-
-  public function __construct(array $schema, string $type, string $collection, Typesense $typesense) {
-    $this->schema = $schema;
-    $this->type = $type;
+  public function __construct(array $collection, AbstractTypesenseModule $module) {
     $this->collection = $collection;
-    $this->typesense = $typesense;
+    $this->module = $module;
   }
 
 }
