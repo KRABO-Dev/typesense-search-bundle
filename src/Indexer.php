@@ -23,6 +23,7 @@ use Contao\CoreBundle\Search\Indexer\IndexerException;
 use Contao\CoreBundle\Search\Indexer\IndexerInterface;
 use Contao\PageModel;
 use Contao\StringUtil;
+use Contao\System;
 
 class Indexer implements  IndexerInterface {
 
@@ -162,34 +163,16 @@ class Indexer implements  IndexerInterface {
       }
     }
 
-    // Strip non-indexable areas
-    while (($intStart = strpos($strContent, '<!-- indexer::stop -->')) !== false)
-    {
-      if (($intEnd = strpos($strContent, '<!-- indexer::continue -->', $intStart)) !== false)
-      {
-        $intCurrent = $intStart;
-
-        // Handle nested tags
-        while (($intNested = strpos($strContent, '<!-- indexer::stop -->', $intCurrent + 22)) !== false && $intNested < $intEnd)
-        {
-          if (($intNewEnd = strpos($strContent, '<!-- indexer::continue -->', $intEnd + 26)) !== false)
-          {
-            $intEnd = $intNewEnd;
-            $intCurrent = $intNested;
-          }
-          else
-          {
-            break; // see #5119
-          }
-        }
-
-        $strContent = substr($strContent, 0, $intStart) . substr($strContent, $intEnd + 26);
-      }
-      else
-      {
-        break; // see #5119
+    $stop = '<!-- indexer::stop -->';
+    $continue = '<!-- indexer::continue -->';
+    while (($pos = strrpos($strContent, $stop)) !== false) {
+      $discarded = substr($strContent, $pos);
+      $strContent = substr($strContent, 0, $pos);
+      if (($continuePos = strpos($discarded, $continue)) !== false) {
+        $strContent .= substr($discarded, ($continuePos));
       }
     }
+    $strContent = str_replace($continue, "", $strContent);
 
     $arrMatches = array();
     preg_match('/<\/head>/', $strContent, $arrMatches, PREG_OFFSET_CAPTURE);
@@ -210,10 +193,10 @@ class Indexer implements  IndexerInterface {
     }
 
     // Add a whitespace character before line-breaks and between consecutive tags (see #5363)
-    $strBody = str_ireplace(array('<br', '><'), array(' <br', '> <'), $strBody);
+    /*$strBody = str_ireplace(array('<br', '><'), array(' <br', '> <'), $strBody);
     $strBody = strip_tags($strBody);
     $strBody = trim($strBody);
-    $strBody = StringUtil::decodeEntities($strBody);
+    $strBody = StringUtil::decodeEntities($strBody);*/
     $arrData['body'] = $strBody;
 
     // Put everything together
