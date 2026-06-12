@@ -163,6 +163,11 @@ class Indexer implements  IndexerInterface {
       }
     }
 
+    $stop = '<!-- indexer::forcestop -->';
+    while (($pos = strrpos($strContent, $stop)) !== false) {
+      $strContent = substr($strContent, 0, $pos);
+    }
+
     $stop = '<!-- indexer::stop -->';
     $continue = '<!-- indexer::continue -->';
     while (($pos = strrpos($strContent, $stop)) !== false) {
