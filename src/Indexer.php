@@ -198,10 +198,10 @@ class Indexer implements  IndexerInterface {
     }
 
     // Add a whitespace character before line-breaks and between consecutive tags (see #5363)
-    /*$strBody = str_ireplace(array('<br', '><'), array(' <br', '> <'), $strBody);
+    $strBody = str_ireplace(array('<br', '><'), array(' <br', '> <'), $strBody);
     $strBody = strip_tags($strBody);
     $strBody = trim($strBody);
-    $strBody = StringUtil::decodeEntities($strBody);*/
+    $strBody = StringUtil::decodeEntities($strBody);
     $arrData['body'] = $strBody;
 
     // Put everything together
