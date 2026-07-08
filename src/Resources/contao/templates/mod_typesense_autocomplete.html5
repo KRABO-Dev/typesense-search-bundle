@@ -66,7 +66,7 @@
          placeholder: '<?= $this->search; ?>',
          onStateChange({ state }) {
           const query = state.query;
-          const tag = <?php if (strlen($collection['analytics_tag'])): ?><?= str_replace("'", "\'", $collection['analytics_tag']); ?><? else: ?>''<? endif; ?>;
+          const tag = <?php if (strlen($this->collections[0]['analytics_tag'])): ?><?= str_replace("'", "\'", $this->collections[0]['analytics_tag']); ?><? else: ?>''<? endif; ?>;
           if (query == lastQuery) {
             return;
           }
@@ -88,7 +88,6 @@
             });
           }
           sendAnalytics('push', data);
-          console.log("The Autocomplete state has changed:", data, state, this);
         },
          onSubmit: function(event) {
           <?php if (strlen($this->redirect)): ?>window.location = '<?=$this->redirect; ?>?keywords=' + event.state.query; <?php endif; ?>
