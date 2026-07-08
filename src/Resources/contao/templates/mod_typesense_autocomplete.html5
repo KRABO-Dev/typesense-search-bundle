@@ -11,10 +11,45 @@
 
 
  <script>
+    var analyticsRecordId = 0;
+    var lastQuery = '';
+    var xhr;
+    function sendAnalytics(func, data, callback=null) {
+      if (xhr) {
+        xhr.abort();
+      }
+      xhr = new XMLHttpRequest();
+      let url = '/typesense/analytics/' + func + '?data=' + JSON.stringify(data);
+      xhr.keepalive = true;
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          r = JSON.parse(this.responseText)
+          if (r && r.id) {
+            analyticsRecordId = r.id;
+          }
+          if (callback) {
+            callback(data);
+          }
+        }
+      }
+      xhr.send();
+    }
+    function clickResult(e) {
+      e.preventDefault();
+      let data = {
+        id: analyticsRecordId,
+        click_through: this.href
+      };
+      console.log('middleware', data);
+      sendAnalytics('click', data, (data) => {
+        window.location = data.click_through;
+      });
+    }
      let typesenseClient = new Typesense.Client({
          'nodes': [
            {
-         host: "<?= $this->config['host']; ?>",
+         host: "localhost" ,//<?= $this->config['host']; ?>",
          path: "",
          port: "<?= $this->config['port']; ?>",
          protocol: "<?= $this->config['protocol']; ?>",
@@ -26,13 +61,39 @@
 
 
      const {autocomplete} = window['@algolia/autocomplete-js'];
-     autocomplete({
+     const Autocomplete = autocomplete({
          container: '.typesense-container.autocomplete #autocomplete',
          placeholder: '<?= $this->search; ?>',
+         onStateChange({ state }) {
+          const query = state.query;
+          const tag = <?php if (strlen($collection['analytics_tag'])): ?><?= str_replace("'", "\'", $collection['analytics_tag']); ?><? else: ?>''<? endif; ?>;
+          if (query == lastQuery) {
+            return;
+          }
+          lastQuery = query;
+          var data = {
+            id: analyticsRecordId,
+            q: query,
+            result_count: 0,
+            result_detail: [],
+            tag: tag,
+            click_through: ''
+          }
+          for (let key in state.context) {
+            const index = state.context[key].request_params.collection_name;
+            data.result_count += state.context[key].found;
+            data.result_detail.push({
+              collection: index,
+              result_count: state.context[key].found
+            });
+          }
+          sendAnalytics('push', data);
+          console.log("The Autocomplete state has changed:", data, state, this);
+        },
          onSubmit: function(event) {
           <?php if (strlen($this->redirect)): ?>window.location = '<?=$this->redirect; ?>?keywords=' + event.state.query; <?php endif; ?>
          },
-         async getSources({query}) {
+         async getSources({query, setContext}) {
           <?php foreach($this->collections as $collection): ?>
             const results<?=$collection['id']; ?> = await typesenseClient.collections('<?= $this->config['collection_prefix']; ?><?= $collection['name']; ?>').documents().search({
                  q: query
@@ -47,6 +108,9 @@
               {
                 sourceId: 'source<?= $collection['id']; ?>',
                 getItems() {
+                   setContext({
+                    results<?= $collection['id']; ?>: results<?= $collection['id']; ?>
+                  });
                    return results<?= $collection['id']; ?>.hits;
                 },
                 templates: {
@@ -90,7 +154,13 @@
               } <?php if ($i > 0): ?>,<?php endif; ?>
             <?php endforeach; ?>
           ];
-         }
+         },
+         render({ children, render }, root) {
+          document.querySelectorAll('.aa-Source .aa-Item a').forEach((el) => {
+            el.addEventListener('click', clickResult);
+          });
+          render(children, root);
+        }
      });
  </script>
  <?php else: ?>

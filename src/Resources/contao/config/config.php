@@ -13,6 +13,11 @@ array_insert($GLOBALS['BE_MOD']['system'], 3, array
   (
     'tables'            => array('tl_typesense_collection'),
   ),
+  'tl_typesense_analytics' => array
+  (
+    'tables'            => array('tl_typesense_analytics'),
+    'export' => [\Krabo\TypesenseSearchBundle\Backend\Exporter::class, 'export']
+  ),
 ));
 
 array_insert($GLOBALS['FE_MOD'], 3, [

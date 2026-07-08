@@ -16,6 +16,76 @@
 
 
  <script>
+    var analyticsRecordId = 0;
+    var lastQuery = '';
+    var xhr;
+    function sendAnalytics(func, data, callback=null) {
+      if (xhr) {
+        xhr.abort();
+      }
+      xhr = new XMLHttpRequest();
+      let url = '/typesense/analytics/' + func + '?data=' + JSON.stringify(data);
+      xhr.keepalive = true;
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          r = JSON.parse(this.responseText)
+          if (r && r.id) {
+            analyticsRecordId = r.id;
+          }
+          if (callback) {
+            callback(data);
+          }
+        }
+      }
+      xhr.send();
+    }
+    function clickResult(e) {
+      e.preventDefault();
+      let data = {
+        id: analyticsRecordId,
+        click_through: this.href
+      };
+      sendAnalytics('click', data, (data) => {
+        window.location = data.click_through;
+      });
+    }
+    function middleware({ instantSearchInstance }) {
+      let listener;
+      return {
+        subscribe() {},
+        unsubscribe() {},
+        onStateChange({ uiState }) {
+          const lastResults = search.helper.lastResults;
+          const query = search.helper.state.query;
+          const hits = lastResults.nbHits;
+          const tag = <?php if (strlen($collection['analytics_tag'])): ?><?= str_replace("'", "\'", $collection['analytics_tag']); ?><? else: ?>''<? endif; ?>;
+          if (query == lastQuery) {
+            return;
+          }
+          lastQuery = query;
+          var data = {
+            id: analyticsRecordId,
+            q: query,
+            result_count: 0,
+            result_detail: [],
+            tag: tag,
+            click_through: ''
+          }
+          for (let key in search.renderState) {
+            const index = typesenseInstantsearchAdapter.configuration.collectionSpecificSearchParameters[key].collection;
+            data.result_count += search.renderState[key].stats.nbHits;
+            data.result_detail.push({
+              collection: index,
+              result_count: search.renderState[key].stats.nbHits
+            })
+          }
+          sendAnalytics('push', data);
+        },
+      };
+    };
+
+
      let typesenseInstantsearchAdapter = new TypesenseInstantsearchAdapter({
      server: {
       'apiKey': '<?= $this->config['search_api_key']; ?>',
@@ -47,6 +117,12 @@
        }
        <?php endif; ?>
      });
+     search.on("render", () => {
+      document.querySelectorAll('ol.ais-Hits-list li.ais-Hits-item a').forEach((el) => {
+        el.addEventListener('click', clickResult);
+      });
+    });
+     search.use(middleware);
      search.addWidgets([
        instantsearch.widgets.searchBox({
            container: '.typesense-container.instantsearch #searchbox',

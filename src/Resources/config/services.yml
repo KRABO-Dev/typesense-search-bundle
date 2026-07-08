@@ -2,6 +2,7 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
+  Krabo\TypesenseSearchBundle\Controller\AnalyticsController: ~  
   Krabo\TypesenseSearchBundle\Controller\IsotopeProductController:
     public: true
   Krabo\TypesenseSearchBundle\Cron\IndexIsoProductsCron:
