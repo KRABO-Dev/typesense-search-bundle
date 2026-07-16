@@ -24,3 +24,4 @@ $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_port'] = ['Poort', ''];
 $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_index_api_key'] = ['Key om te indexeren', ''];
 $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_search_api_key'] = ['Key om te zoeken', 'Deze sleutel wordt gelekt op de website. Gebruik dus een sleutel die alleen mag zoeken'];
 $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_collection_prefix'] = ['Prefix van de collectie', 'Bijv. productie_'];
+$GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_analytics_delete_after'] = ['Verwijder anayltics', 'Bijv. 2 years ago'];

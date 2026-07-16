@@ -40,12 +40,28 @@ class AnalyticsController extends AbstractController {
   public function push(Request $request) {
     $data = StringUtil::decodeEntities(Input::get('data', FALSE));
     $data = json_decode($data, TRUE);
-    unset($data['id']);
+    if (strlen($data['q']) < 4) {
+      return new JsonResponse(['id' => 0]);
+    }
+    if (!empty($data['id'])) {
+      $result = $this->connection->executeQuery("SELECT * FROM `tl_typesense_analytics` WHERE `id` = ?", [$data['id']]);
+      if ($record = $result->fetchAssociative()) {
+        if (!str_starts_with($data['q'], $record['q']) && (!str_starts_with($record['q'], $data['q']) || (strlen($record['q']) != (strlen($data['q']+1))))) {
+          unset($data['id']);
+        }
+      }
+    }
     $data['tstamp'] = time();
     $data['ip'] = $request->getClientIp();
     $data['result_detail'] = json_encode($data['result_detail']);
-    $this->connection->insert('tl_typesense_analytics', $data);
-    $id = $this->connection->lastInsertId();
+    if (!empty($data['id'])) {
+      $id = $data['id'];
+      unset($data['id']);
+      $this->connection->update('tl_typesense_analytics', $data, ['id' => $id]);
+    } else {
+      $this->connection->insert('tl_typesense_analytics', $data);
+      $id = $this->connection->lastInsertId();
+    }
     return new JsonResponse(['id' => $id]);
   }
 

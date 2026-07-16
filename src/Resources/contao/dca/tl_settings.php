@@ -44,6 +44,11 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['krabo_typesense_collection_prefix']
   'inputType'               => 'text',
   'eval'                    => array('tl_class'=>'w50 clr', 'mandatory' => true)
 ];
+$GLOBALS['TL_DCA']['tl_settings']['fields']['krabo_typesense_analytics_delete_after'] = [
+  'inputType'               => 'text',
+  'eval'                    => array('tl_class'=>'w50 clr', 'mandatory' => true),
+  'default'                 => '2 years ago',
+];
 
 \Contao\CoreBundle\DataContainer\PaletteManipulator::create()
   ->addLegend('krabo_typesense_legend')
@@ -54,4 +59,5 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['krabo_typesense_collection_prefix']
   ->addField('krabo_typesense_index_api_key')
   ->addField('krabo_typesense_search_api_key')
   ->addField('krabo_typesense_collection_prefix')
+  ->addField('krabo_typesense_analytics_delete_after')
   ->applyToPalette('default', 'tl_settings');

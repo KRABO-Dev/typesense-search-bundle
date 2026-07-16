@@ -7,3 +7,4 @@ $GLOBALS['TL_LANG']['tl_typesense_analytics']['result_detail'] = ['Result detail
 $GLOBALS['TL_LANG']['tl_typesense_analytics']['ip'] = ['Visitor IP', ''];
 $GLOBALS['TL_LANG']['tl_typesense_analytics']['click_through'] = ['Click Through', ''];
 $GLOBALS['TL_LANG']['tl_typesense_analytics']['tag'] = ['Tag', ''];
+$GLOBALS['TL_LANG']['tl_typesense_analytics']['export'] = 'Export';

@@ -9,6 +9,10 @@ services:
     public: true
     tags:
       - { name: 'contao.cronjob', 'interval': '*/15 * * * *' }
+  Krabo\TypesenseSearchBundle\Cron\ClearAnalyticsCron:
+    public: true
+    tags:
+      - { name: 'contao.cronjob', 'interval': 'daily' }
   Krabo\TypesenseSearchBundle\Indexer:
     tags:
       - { name: 'contao.search_indexer' }

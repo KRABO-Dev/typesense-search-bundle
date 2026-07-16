@@ -24,3 +24,4 @@ $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_port'] = ['Port', ''];
 $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_index_api_key'] = ['Key used for indexing', ''];
 $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_search_api_key'] = ['Key used for searching', 'This key will be leaked on the website. Use a key which is only allowed to search.'];
 $GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_collection_prefix'] = ['Prefix of the collection', 'E.g.. prod_'];
+$GLOBALS['TL_LANG']['tl_settings']['krabo_typesense_analytics_delete_after'] = ['Clear anayltics after', 'E.g. 2 years ago'];
