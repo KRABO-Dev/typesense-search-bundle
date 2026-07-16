@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+use Krabo\TypesenseSearchBundle\DataContainer\Driver\DC_Typesense;
 use Krabo\TypesenseSearchBundle\Typesense;
 
 \Contao\System::loadLanguageFile('tl_typesense_analytics');
@@ -25,7 +26,7 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
   // Config
   'config' => array
   (
-    'dataContainer'             => 'Table',
+    'dataContainer'             => DC_Typesense::class,
     'switchToEdit'              => true,
     'sql'                       => array
     (
@@ -33,6 +34,9 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
       (
         'id' => 'primary'
       )
+    ),
+    'onload_callback' => array(
+      array('tl_typesense_analytics', 'onLoad'),
     ),
   ),
 
@@ -44,7 +48,10 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
       'mode'                    => 2,
       'fields'                  => array('tstamp'),
       'flag'                    => 12,
-      'panelLayout'             => 'sort,filter,search,limit'
+      'panelLayout'             => 'sort,filter,date_search,search,limit',
+      'panel_callback'          => [
+        'date_search'           => ['tl_typesense_analytics', 'dateSearchPanel'],
+      ]
     ),
     'label' => array
     (
@@ -79,7 +86,7 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
       (
         'href'                => 'act=delete',
         'icon'                => 'delete.svg',
-        'attributes'          => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['tl_typesense_collection']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"',
+        'attributes'          => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['tl_typesense_analytics']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"',
       ),
     )
   ),
@@ -164,3 +171,65 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
     ),
   )
 );
+
+class tl_typesense_analytics {
+
+  public function onLoad(\Contao\DataContainer $dc)
+  {
+    /** @var AttributeBagInterface $objSessionBag */
+    $objSessionBag = System::getContainer()->get('session')->getBag('contao_backend');
+    $session = $objSessionBag->all();
+    if (!empty($session['dateSearch'][$dc->table]['tstamp_start'])) {
+      if ($dc instanceof \Krabo\TypesenseSearchBundle\DataContainer\Driver\DC_Typesense) {
+        $dc->addWhere('tstamp >= ?', strtotime($session['dateSearch'][$dc->table]['tstamp_start']));
+      }
+    }
+    if (!empty($session['dateSearch'][$dc->table]['tstamp_stop'])) {
+      if ($dc instanceof \Krabo\TypesenseSearchBundle\DataContainer\Driver\DC_Typesense) {
+        $dc->addWhere('tstamp <= ?', strtotime($session['dateSearch'][$dc->table]['tstamp_stop']));
+      }
+    }
+  }
+
+  public function dateSearchPanel(\Contao\DataContainer $dc) {
+    $strTable = $dc->table;
+    /** @var AttributeBagInterface $objSessionBag */
+    $objSessionBag = System::getContainer()->get('session')->getBag('contao_backend');
+    $session = $objSessionBag->all();
+    // Store search value in the current session
+    if (Input::post('FORM_SUBMIT') == 'tl_filters') {
+      $session['dateSearch'][$strTable]['tstamp_start'] = Input::post('tstamp_start');
+      $session['dateSearch'][$strTable]['tstamp_stop'] = Input::post('tstamp_stop');
+      $objSessionBag->replace($session);
+    }
+
+    $panel = '<div class="tl_search tl_subpanel" style="width: 100%;"><strong>' . $GLOBALS['TL_LANG']['tl_typesense_analytics']['tstamp'][0] . ':</strong>';
+    $panel .= '<div class="tl_subpanel" style="width: 200px">tot&nbsp;';
+    $panel .= $this->createDateField('tstamp_stop', $session['dateSearch'][$strTable]['tstamp_stop']);
+    $panel .= '</div>';
+    $panel .= '<div class="tl_subpanel" style="width: 200px">van&nbsp;';
+    $panel .= $this->createDateField('tstamp_start', $session['dateSearch'][$strTable]['tstamp_start']);
+    $panel .= '</div>';
+    $panel .= '</div>';
+
+    return $panel;
+  }
+
+  protected function createDateField($name, $value): string {
+      return '<input type="search" id="ctrl_' . $name . '" name="' . $name . '" class="tl_text datepicker" value="' . $value . '" style="width: 100px;">
+      <img src="assets/datepicker/images/icon.svg" width="20" height="20" alt="" id="toggle_' . $name . '" style="vertical-align:-6px">
+      <script>window.addEvent("domready", function() {
+        new Picker.Date($$("#ctrl_' . $name . '"), {
+          draggable:false,
+          toggle:$$("#toggle_' . $name . '"),
+          format:"' . \Contao\Date::formatToJs($GLOBALS['TL_CONFIG']['dateFormat']) . '",
+          positionOffset:{x:-197,y:-182},
+           pickerClass:"datepicker_bootstrap",
+          useFadeInOut:!Browser.ie,
+          startDay: ' . $GLOBALS['TL_LANG']['MSC']['weekOffset'] . ',
+          titleFormat:"' . $GLOBALS['TL_LANG']['MSC']['titleFormat'] . '"
+        });
+      });</script>';
+    }
+
+}

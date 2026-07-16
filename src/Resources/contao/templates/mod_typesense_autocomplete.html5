@@ -12,6 +12,7 @@
 
  <script>
     var analyticsRecordId = 0;
+    var currentQuery = '';
     var lastQuery = '';
     var xhr;
     function sendAnalytics(func, data, callback=null) {
@@ -39,9 +40,12 @@
       e.preventDefault();
       let data = {
         id: analyticsRecordId,
-        click_through: this.href
+        click_through: this.href,
+        q: currentQuery
       };
-      console.log('middleware', data);
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set('keywords', currentQuery);
+      //window.history.replaceState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
       sendAnalytics('click', data, (data) => {
         window.location = data.click_through;
       });
@@ -49,7 +53,7 @@
      let typesenseClient = new Typesense.Client({
          'nodes': [
            {
-         host: "<?= $this->config['host']; ?>",
+         host: "localhost", //<?= $this->config['host']; ?>",
          path: "",
          port: "<?= $this->config['port']; ?>",
          protocol: "<?= $this->config['protocol']; ?>",
@@ -65,6 +69,7 @@
          container: '.typesense-container.autocomplete #autocomplete',
          placeholder: '<?= $this->search; ?>',
          onStateChange({ state }) {
+          currentQuery = state.query;
           const query = state.query;
           const tag = <?php if (strlen($this->collections[0]['analytics_tag'])): ?><?= str_replace("'", "\'", $this->collections[0]['analytics_tag']); ?><? else: ?>''<? endif; ?>;
           if (query == lastQuery) {
