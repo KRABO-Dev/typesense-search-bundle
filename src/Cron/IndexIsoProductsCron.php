@@ -46,10 +46,21 @@ class IndexIsoProductsCron {
     $helper = new IsotopeProductHelper();
     $helper->removeProductIndexes();
     $helper->createProductIndexes();
-    $objProducts = Product::findBy([], []);
-    foreach ($objProducts as $objProduct) {
-      $helper->indexProductDocument($objProduct);
-    }
+    $intLimit = 50;
+    $intOffset = 0;
+    do {
+      $count = 0;
+      $objProducts = Product::findBy([], [], ['limit'=> $intLimit, 'offset'=> $intOffset]);
+      foreach ($objProducts as $objProduct) {
+        $count ++;
+        try {
+        $helper->indexProductDocument($objProduct);
+        } catch (\Throwable $e) {
+          // Do nothing.
+        }
+      }
+      $intOffset += 50;
+    } while($count != 0);
   }
 
 }
