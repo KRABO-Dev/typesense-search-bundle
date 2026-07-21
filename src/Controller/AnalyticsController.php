@@ -52,6 +52,7 @@ class AnalyticsController extends AbstractController {
       }
     }
     $data['tstamp'] = time();
+    $data['date'] = time();
     $data['ip'] = $request->getClientIp();
     $data['result_detail'] = json_encode($data['result_detail']);
     if (!empty($data['id'])) {
@@ -72,13 +73,27 @@ class AnalyticsController extends AbstractController {
    *
    * @Route("/click", name="typesense_analytics_click")
    */
-  public function click() {
+  public function click(Request $request) {
     $data = StringUtil::decodeEntities(Input::get('data', FALSE));
     $data = json_decode($data, TRUE);
+    $data['tstamp'] = time();
+    $data['date'] = time();
+    $data['ip'] = $request->getClientIp();
+
+    $result = $this->connection->executeQuery("SELECT * FROM `tl_typesense_analytics` WHERE `id` = ?", [$data['id']]);
+    if ($record = $result->fetchAssociative()) {
+      if ($data['q'] != $record['q']) {
+        unset($data['id']);
+      }
+    }
+
     if (isset($data['id'])) {
       $id = $data['id'];
       unset($data['id']);
       $this->connection->update('tl_typesense_analytics', $data, ['id' => $id]);
+    } else {
+      $this->connection->insert('tl_typesense_analytics', $data);
+      $id = $this->connection->lastInsertId();
     }
     return new JsonResponse([]);
   }

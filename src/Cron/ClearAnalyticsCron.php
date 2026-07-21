@@ -43,9 +43,12 @@ class ClearAnalyticsCron {
 
   public function __invoke(): void {
     $this->framework->initialize();
-    $timestamp = $GLOBALS['TL_CONFIG']['krabo_typesense_analytics_delete_after'] ?? '2 years ago';
-    $tstamp = strtotime($timestamp);
-    $this->connection->executeQuery("DELETE FROM `tl_typesense_analytics` WHERE `tstamp` < ?", [$tstamp]);
+    $timestamp = $GLOBALS['TL_CONFIG']['krabo_typesense_analytics_delete_after'];
+    if ($timestamp > 0) {
+      $tstamp = strtotime($timestamp . ' years ago');
+      $this->connection->executeQuery("DELETE FROM `tl_typesense_analytics` WHERE `date` < ?", [$tstamp]);
+    }
+
   }
 
 }

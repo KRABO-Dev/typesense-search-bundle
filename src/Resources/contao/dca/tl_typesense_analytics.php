@@ -46,7 +46,7 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
     'sorting' => array
     (
       'mode'                    => 2,
-      'fields'                  => array('tstamp'),
+      'fields'                  => array('date'),
       'flag'                    => 12,
       'panelLayout'             => 'sort,filter,date_search,search,limit',
       'panel_callback'          => [
@@ -56,7 +56,7 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
     'label' => array
     (
       'showColumns'             => true,
-      'fields'                  => array('q', 'result_count', 'click_through', 'tag'),
+      'fields'                  => array('date', 'q', 'result_count', 'click_through', 'tag'),
     ),
     'global_operations' => array
     (
@@ -95,7 +95,7 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
   'palettes' => array
   (
     '__selector__'                => [],
-    'default'                     => 'tstamp,q;result_count;result_detail;ip;click_through;tag'
+    'default'                     => 'date,q;result_count;result_detail;ip;click_through;tag'
   ),
 
   // Subpalettes
@@ -111,6 +111,15 @@ $GLOBALS['TL_DCA']['tl_typesense_analytics'] = array
       'sql'                     => "int(10) unsigned NOT NULL auto_increment"
     ),
     'tstamp' => array
+    (
+      'filter'                  => true,
+      'sorting'                 => true,
+      'flag'                    => 6,
+      'inputType'               => 'text',
+      'sql'                     => "int(10) unsigned NOT NULL default 0",
+      'eval'                    => array('mandatory'=>true, 'rgxp'=>'datim', 'datepicker'=>true, 'tl_class'=>'w50 wizard'),
+    ),
+    'date' => array
     (
       'filter'                  => true,
       'sorting'                 => true,
@@ -181,12 +190,12 @@ class tl_typesense_analytics {
     $session = $objSessionBag->all();
     if (!empty($session['dateSearch'][$dc->table]['tstamp_start'])) {
       if ($dc instanceof \Krabo\TypesenseSearchBundle\DataContainer\Driver\DC_Typesense) {
-        $dc->addWhere('tstamp >= ?', strtotime($session['dateSearch'][$dc->table]['tstamp_start']));
+        $dc->addWhere('date >= ?', strtotime($session['dateSearch'][$dc->table]['tstamp_start']));
       }
     }
     if (!empty($session['dateSearch'][$dc->table]['tstamp_stop'])) {
       if ($dc instanceof \Krabo\TypesenseSearchBundle\DataContainer\Driver\DC_Typesense) {
-        $dc->addWhere('tstamp <= ?', strtotime($session['dateSearch'][$dc->table]['tstamp_stop']));
+        $dc->addWhere('date <= ?', strtotime($session['dateSearch'][$dc->table]['tstamp_stop']));
       }
     }
   }
@@ -205,10 +214,10 @@ class tl_typesense_analytics {
 
     $panel = '<div class="tl_search tl_subpanel" style="width: 100%;"><strong>' . $GLOBALS['TL_LANG']['tl_typesense_analytics']['tstamp'][0] . ':</strong>';
     $panel .= '<div class="tl_subpanel" style="width: 200px">tot&nbsp;';
-    $panel .= $this->createDateField('tstamp_stop', $session['dateSearch'][$strTable]['tstamp_stop']);
+    $panel .= $this->createDateField('tstamp_stop', $session['dateSearch'][$strTable]['tstamp_stop'] ?? '');
     $panel .= '</div>';
     $panel .= '<div class="tl_subpanel" style="width: 200px">van&nbsp;';
-    $panel .= $this->createDateField('tstamp_start', $session['dateSearch'][$strTable]['tstamp_start']);
+    $panel .= $this->createDateField('tstamp_start', $session['dateSearch'][$strTable]['tstamp_start'] ?? '');
     $panel .= '</div>';
     $panel .= '</div>';
 

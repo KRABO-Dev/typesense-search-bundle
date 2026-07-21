@@ -106,13 +106,30 @@ class IsotopeProductHelper {
       $arrPages = Database::getInstance()->getChildRecords($arrRoots, 'tl_page', false, $arrRoots);
     }
 
-    // Get default URL - Check product first and if not fall back to config reader page
-    $intJumpTo = $objProduct->feedJumpTo ?: $objConfig->feedJumpTo;
+    if (($cartJumpToPage = PageModel::findByPk($objConfig->feedJumpTo)) !== null) {
+      $cartJumpToPage->loadDetails();
+      foreach($productCategories as $i => $catJumpTo) {
+        if (($catJumpToPage = PageModel::findByPk($catJumpTo)) !== null) {
+          $catJumpToPage->loadDetails();
+          if ($catJumpToPage->rootId != $cartJumpToPage->rootId) {
+            unset($productCategories[$i]);
+          } else {
+            $intJumpTo = $catJumpTo;
+            break;
+          }
+        }
+      }
+    }
+    if (!count($productCategories)) {
+      // Product is not visible in this webshop.
+      return;
+    }
 
     if(empty($intJumpTo) || $intJumpTo === 0)
     {
-      $intJumpTo = reset($productCategories);
+      $intJumpTo = $objProduct->feedJumpTo ?: $objConfig->feedJumpTo;
     }
+    
 
     // Ensure the product is published, it's set to be in the feed, it has a price,
     // and it's been set to a category in one of the site roots for this config.
@@ -166,7 +183,7 @@ class IsotopeProductHelper {
       $objItem['available'] = $objProduct->isAvailableInFrontend();
       $objItem['title'] = StringUtil::decodeEntities($defaultTitle);
       foreach($languages as $language) {
-        $objItem['title_' . $language] = '';
+        $objItem['title_' . $language] = StringUtil::decodeEntities($defaultTitle);
       }
       $objItem['url'] = $productUrl;
       $objItem['description'] = StringUtil::decodeEntities($defaultDescription);

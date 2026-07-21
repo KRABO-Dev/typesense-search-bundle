@@ -382,6 +382,9 @@ class Exporter {
         $strReplaceSuffix .= ", '$strSource', '$strTarget')";
       }
     }
+    if (!strlen($searchValue)) {
+      return;
+    }
 
     $strPattern = "$strReplacePrefix CAST(%s AS CHAR) $strReplaceSuffix REGEXP ?";
 
