@@ -99,35 +99,40 @@ class IsotopeProductHelper {
     // Get root pages that belong to this store config.
     $arrPages = array();
     $productCategories = \array_map('\intval', $objProduct->getCategories(true));
-    $objRoot = PageModel::findBy(array("type='root'", "iso_config"), $objConfig->id);
-    if(null !== $objRoot)
+    $objRoots = PageModel::findBy(array("type='root'", "iso_config = ?"), $objConfig->id);
+    $arrRoots = [];
+    if(null !== $objRoots)
     {
-      $arrRoots = $objRoot->fetchEach('id');
+      foreach($objRoots as $objRoot) {
+        if ($objRoot->iso_config == $objConfig->id) {
+          $arrRoots[] = $objRoot->id;
+        }
+      }
       $arrPages = Database::getInstance()->getChildRecords($arrRoots, 'tl_page', false, $arrRoots);
     }
 
-    if (($cartJumpToPage = PageModel::findByPk($objConfig->feedJumpTo)) !== null) {
-      $cartJumpToPage->loadDetails();
-      foreach($productCategories as $i => $catJumpTo) {
-        if (($catJumpToPage = PageModel::findByPk($catJumpTo)) !== null) {
-          $catJumpToPage->loadDetails();
-          if ($catJumpToPage->rootId != $cartJumpToPage->rootId) {
-            unset($productCategories[$i]);
-          } else {
-            $intJumpTo = $catJumpTo;
-            break;
-          }
+    
+    foreach($productCategories as $i => $catJumpTo) {
+      if (($catJumpToPage = PageModel::findByPk($catJumpTo)) !== null) {
+        $catJumpToPage->loadDetails();
+        if (!in_array($catJumpToPage->rootId, $arrRoots)) {
+          unset($productCategories[$i]);
+        } else {
+          $intJumpTo = $catJumpTo;
+          break;
         }
       }
     }
+      
     if (!count($productCategories)) {
       // Product is not visible in this webshop.
       return;
     }
 
-    if(empty($intJumpTo) || $intJumpTo === 0)
-    {
-      $intJumpTo = $objProduct->feedJumpTo ?: $objConfig->feedJumpTo;
+    
+    $intJumpTo = $objProduct->feedJumpTo ?: $objConfig->feedJumpTo;
+    if (empty($intJumpTo)) {
+      return;
     }
     
 
