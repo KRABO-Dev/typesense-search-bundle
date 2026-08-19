@@ -29,6 +29,7 @@ use Isotope\Isotope;
 use Isotope\Model\Config as IsoConfig;
 use Isotope\Model\Product;
 use Isotope\Model\ProductCollection\Cart;
+use Haste\Util\Url;
 use Krabo\TypesenseSearchBundle\Typesense;
 
 class IsotopeProductHelper {
@@ -46,12 +47,28 @@ class IsotopeProductHelper {
 
   public function createProductIndexes() {
     static $objConfigs = null;
+    static $objRoots = null;
     if ($objConfigs === null) {
-      $objConfigs = IsoConfig::findAll();
+      $objConfigs = [];
+      foreach(IsoConfig::findAll() as $objConfig) {
+        $objConfigs[$objConfig->id] = $objConfig;
+      }
     }
-    $typesense = Typesense::getInstance();
-    foreach ($objConfigs as $objConfig) {
-      $typesense->createCollection('iso_product_index_' . $objConfig->id, $this->getProductCollectionFields(), 'iso_product');
+
+    if ($objRoots === null) {
+      // Get root pages that belong to this store config.
+      $objRoots = PageModel::findBy(array("type='root'"), []);
+    }
+
+    if ($objRoots !== null) {
+      $typesense = Typesense::getInstance();
+      foreach($objRoots as $objRoot) {
+        if ($objRoot->iso_config && isset($objConfigs[$objRoot->iso_config])) {
+          $objConfig = $objConfigs[$objRoot->iso_config];
+          $collection = 'iso_product_index_' . $objRoot->id;
+          $typesense->createCollection($collection, $this->getProductCollectionFields(), 'iso_product');
+        }
+      }
     }
   }
 
@@ -70,25 +87,38 @@ class IsotopeProductHelper {
   public function indexProductDocument(\Isotope\Interfaces\IsotopeProduct $objProduct)
   {
     static $objConfigs = null;
+    static $objRoots = null;
     if ($objConfigs === null) {
-      $objConfigs = IsoConfig::findAll();
+      $objConfigs = [];
+      foreach(IsoConfig::findAll() as $objConfig) {
+        $objConfigs[$objConfig->id] = $objConfig;
+      }
     }
 
-    foreach($objConfigs as $objConfig)
-    {
-      $collection = 'iso_product_index_' . $objConfig->id;
+    if ($objRoots === null) {
+      // Get root pages that belong to this store config.
+      $objRoots = PageModel::findBy(array("type='root'"), []);
+    }
 
-      // Override shop configuration to generate correct price
-      $objCart = new Cart();
-      $objCart->config_id = $objConfig->id;
-      Isotope::setConfig($objConfig);
-      Isotope::setCart($objCart);
+    if ($objRoots !== null) {
+      foreach($objRoots as $objRoot) {
+        if ($objRoot->iso_config && isset($objConfigs[$objRoot->iso_config])) {
+          $objConfig = $objConfigs[$objRoot->iso_config];
+          $collection = 'iso_product_index_' . $objRoot->id;
 
-      $this->indexProductDocumentPerConfig($objProduct, $objConfig, $collection);
+          // Override shop configuration to generate correct price
+          $objCart = new Cart();
+          $objCart->config_id = $objConfig->id;
+          Isotope::setConfig($objConfig);
+          Isotope::setCart($objCart);
+
+          $this->indexProductDocumentPerConfig($objProduct, $objRoot, $objConfig, $collection);
+        } 
+      }
     }
   }
 
-  public function indexProductDocumentPerConfig(\Isotope\Interfaces\IsotopeProduct $objProduct, $objConfig, string $collection)
+  public function indexProductDocumentPerConfig(\Isotope\Interfaces\IsotopeProduct $objProduct, $objRoot, $objConfig, string $collection)
   {
     $languages = $this->getAvailableLanguages();
     $typesense = Typesense::getInstance();
@@ -99,17 +129,8 @@ class IsotopeProductHelper {
     // Get root pages that belong to this store config.
     $arrPages = array();
     $productCategories = \array_map('\intval', $objProduct->getCategories(true));
-    $objRoots = PageModel::findBy(array("type='root'", "iso_config = ?"), $objConfig->id);
-    $arrRoots = [];
-    if(null !== $objRoots)
-    {
-      foreach($objRoots as $objRoot) {
-        if ($objRoot->iso_config == $objConfig->id) {
-          $arrRoots[] = $objRoot->id;
-        }
-      }
-      $arrPages = Database::getInstance()->getChildRecords($arrRoots, 'tl_page', false, $arrRoots);
-    }
+    $arrRoots = [$objRoot->id];
+    $arrPages = Database::getInstance()->getChildRecords($arrRoots, 'tl_page', false, $arrRoots);
 
     
     foreach($productCategories as $i => $catJumpTo) {
@@ -129,8 +150,6 @@ class IsotopeProductHelper {
       return;
     }
 
-    
-    $intJumpTo = $objProduct->feedJumpTo ?: $objConfig->feedJumpTo;
     if (empty($intJumpTo)) {
       return;
     }
@@ -158,25 +177,18 @@ class IsotopeProductHelper {
       if (($jumpToPage = PageModel::findByPk($intJumpTo)) !== null) {
         $jumpToPage->loadDetails();
       }
-      $productUrl = $objProduct->generateUrl($jumpToPage);
 
-      if ($jumpToPage !== null
-        && \trim($jumpToPage->domain)
-        && ($firstPageModel = PageModel::findFirstPublishedByPid($jumpToPage->rootId)) !== null
-      ) {
-        $strLink = $firstPageModel->getFrontendUrl();
+      $strParams = '';
+      if ($jumpToPage->iso_readerMode !== 'none') {
+        $strParams = '/'.($objProduct->alias ?: $objProduct->id);
+
+        if (!$GLOBALS['TL_CONFIG']['useAutoItem'] || !\in_array('product', $GLOBALS['TL_AUTO_ITEM'], true)) {
+            $strParams = '/product'.$strParams;
+        }
       }
-      // Fall back to the current domain if it's not set here
-      if (empty($strLink)) {
-        $strLink = Environment::get('base');
-      }
-
-      // The product and page model generated an absolute URL!
-      if (\stripos($productUrl, 'http') !== 0) {
-        $productUrl = $strLink . $productUrl;
-      }
-
-
+      $productUrl = $jumpToPage->getAbsoluteUrl($strParams);
+      $productUrl = Url::addQueryString(http_build_query($objProduct->getOptions()), $productUrl);
+      $strLink = $objRoot->getAbsoluteUrl();
 
       $objItem = [];
       $defaultTitle = $objProduct->name;
@@ -216,6 +228,14 @@ class IsotopeProductHelper {
           $translatedDescription = Controller::convertRelativeUrls($translatedDescription, $strLink);
           $translatedDescription = strip_tags($translatedDescription);
           $objItem['description_' . $language] = StringUtil::decodeEntities($translatedDescription);
+          if ($language == $objRoot->language) {
+            if (strlen($objItem['title_' . $language])) {
+              $objItem['title'] = $objItem['title_' . $language];
+            }
+            if (strlen($objItem['description_' . $language])) {
+              $objItem['description'] = $objItem['description_' . $language];
+            }
+          }
         }
       }
 
@@ -266,22 +286,30 @@ class IsotopeProductHelper {
     $languages = $this->getAvailableLanguages();
     $return[] = [
       'name' => 'title',
-      'type' => 'string'
+      'type' => 'string',
+      'infix' => true,
+      'stem' => true,
     ];
     foreach($languages as $lang) {
       $return[] = [
         'name' => 'title_' . $lang,
-        'type' => 'string'
+        'type' => 'string',
+        'infix' => true,
+        'stem' => true,
       ];
     }
     $return[] = [
       'name' => 'description',
-      'type' => 'string'
+      'type' => 'string',
+      'infix' => true,
+      'stem' => true,
     ];
     foreach($languages as $lang) {
       $return[] = [
         'name' => 'description_' . $lang,
-        'type' => 'string'
+        'type' => 'string',
+        'infix' => true,
+        'stem' => true,
       ];
     }
     $return[] = [
