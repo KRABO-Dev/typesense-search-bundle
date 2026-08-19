@@ -36,12 +36,24 @@ class IsotopeProductHelper {
 
   public function removeProductIndexes() {
     static $objConfigs = null;
+    static $objRoots = null;
     if ($objConfigs === null) {
       $objConfigs = IsoConfig::findAll();
     }
     $typesense = Typesense::getInstance();
     foreach ($objConfigs as $objConfig) {
       $typesense->deleteCollection('iso_product_index_' . $objConfig->id);
+    }
+
+    if ($objRoots === null) {
+      // Get root pages that belong to this store config.
+      $objRoots = PageModel::findBy(array("type='root'"), []);
+    }
+
+    if ($objRoots !== null) {
+      foreach($objRoots as $objRoot) {
+        $typesense->deleteCollection('iso_product_index_' . $objRoot->id);
+      }
     }
   }
 
