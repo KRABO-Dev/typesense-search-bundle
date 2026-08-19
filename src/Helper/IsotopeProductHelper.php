@@ -188,7 +188,7 @@ class IsotopeProductHelper {
       }
       $productUrl = $jumpToPage->getAbsoluteUrl($strParams);
       $productUrl = Url::addQueryString(http_build_query($objProduct->getOptions()), $productUrl);
-      $strLink = $objRoot->useSsl ? 'https://' : 'http://' . $objRoot->dns;
+      $strLink = $objRoot->useSsl ? 'https://' : 'http://' . $objRoot->dns . '/';
 
       $objItem = [];
       $defaultTitle = $objProduct->name;
